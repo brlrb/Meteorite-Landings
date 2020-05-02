@@ -1,0 +1,88 @@
+---
+title: "Meteorite Landings"
+author: "Bikram Maharjan"
+date: "2/18/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE}
+
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(data.table)
+library(lubridate)
+library(compare)
+
+
+```
+
+
+### In this file we will obtain a distinct coordinates (Latitude & Longitude)
+### Prepare the dataset
+```{r}
+
+# Read the meteorite-landings.csv downloaded from https://www.kaggle.com/nasa/meteorite-landings
+meteorite_landings <- read.csv('meteorite-landings.csv', stringsAsFactors = FALSE)
+
+# Reorder the columns
+# I did this because I want to see the data in this type of order
+mlandings <- meteorite_landings[c(2,1,6,7,5,3,4,8,9,10)]
+
+head(mlandings)
+```
+
+
+
+#### Fetch Latitude & Longitude
+```{r}
+
+# Fetch `reclat` and `reclong` column to get Geo Location Name. Eg: Country / Region name
+latitude_longitude <- meteorite_landings[c(8,9)]
+
+# Round off the Latitude and Longitude value to 4 digits
+# 4th Decimal place: The fourth decimal place is worth up to 11 m: it can identify a parcel of land
+# Referring to: 
+# https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude
+# https://en.wikipedia.org/wiki/Decimal_degrees
+latitude_longitude$reclat <- round(latitude_longitude$reclat, digits = 4)
+latitude_longitude$reclong <- round(latitude_longitude$reclong, digits = 4)
+
+
+# Join `reclat` and `reclong` into one column to get distinct coordinates
+# The reason to do this is to have unique coordinates that we can re-apply with the full dataset
+latitude_longitude$lat_lng <- mapply(
+  function(x, y){
+    paste(x,y, sep = ",")
+  }, 
+  latitude_longitude$reclat, 
+  latitude_longitude$reclong
+  ) 
+
+# Fetch distinct Geo Location & keep all the columns
+distinct_latitude_longitude <- latitude_longitude %>% 
+                                drop_na() %>%
+                                select(reclat, reclong, lat_lng) %>%
+                                distinct(lat_lng, .keep_all = TRUE)
+
+ 
+
+# We now have a new CSV file with distinct Latitude & Longitude [reclat, reclong, lat_lng]
+# Save the file in CSV
+# Use Python script to call GeoNames API and get corrosponding Country Names
+# Python Script available in this URL: https://www.kaggle.com/brllrb/convert-latitude-longitude-into-location-name
+write.csv(distinct_latitude_longitude, "distinct_latitude_longitude.csv")
+
+
+
+############### Dataset is ready to use ############### 
+
+```
+
+
+

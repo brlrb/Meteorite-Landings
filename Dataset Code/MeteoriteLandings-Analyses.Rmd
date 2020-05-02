@@ -1,0 +1,146 @@
+---
+title: "Meteorite Landings Analyses"
+author: "Bikram Maharjan"
+date: "4/28/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+### Meteorite Landings Analyses
+```{r}
+
+
+# Group by fall
+# Count the number of fall category
+# Fell: The meteorite's fall was observed
+# Found: The meteroite's fall was not observed, but later found
+
+meteorite.fall <- mlandings %>% group_by(fall) %>% summarise(count = n()) %>% arrange(desc(fall))
+meteorite.fall
+
+
+```
+
+
+
+```{r}
+
+# Group by recclass
+# This is the class of meteorite
+# It is based on physical, chemical, and other characteristics
+
+meteorite.recclass <- mlandings %>% group_by(recclass) %>% summarise(count = n()) %>% arrange(desc(count))
+
+# Displaying top 5 interms of count 
+head(meteorite.recclass, 5)
+```
+
+
+```{r}
+
+
+# Group by geo Geo Location
+distinct_geo_location <- mlandings %>% group_by(GeoLocation, reclat, reclong) %>% summarise(count = n()) %>% arrange(desc(count))
+
+
+# Group by year_fell and count
+meteorite_fall_year_count <- mlandings %>% group_by(year_fall) %>% summarise(count = n()) %>% arrange(desc(year_fall)) %>% filter(count > 50 & is.na(year_fall) == FALSE)
+
+
+mlandings %>% group_by(year_fall) %>% summarise(count = n()) %>% arrange(desc(year_fall))
+
+```
+
+
+
+
+```{r}
+
+# Read country_code.csv
+country_code <- read.csv('list_country_code.csv', header=TRUE ,sep="," , stringsAsFactors = FALSE)
+country_name <- read.csv('country_name.csv', header=TRUE ,sep="," , stringsAsFactors = FALSE)
+
+country_code
+country_name
+
+
+distinct_geo_location_775 <- head(distinct_geo_location, 775)
+```
+
+
+
+```{r}
+distinct_geo_location_775$country_name <- country_name$country_name
+
+```
+
+
+```{r}
+
+country_name_count <- distinct_geo_location_775 %>% group_by(country_name) %>% summarise(count = n()) %>% arrange(desc(count)) %>% filter(count > 15) 
+
+country_name_count %>% summarise_all(funs(sum))
+sum(country_name_count[, 'count'])
+
+```
+
+
+```{r}
+
+ggplot(country_name_count, aes(x="", y=count, fill=country_name)) +
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y") +
+  theme(axis.text.x=element_blank())+
+  scale_fill_brewer(palette="Set1") + 
+  ggtitle("More than 50% of the Meteorite falls in the Antartica") +
+  labs(fill = "Countries with more than 150 Meteorite fall")+
+  theme_void() 
+
+
+ggplot(country_name_count, aes("", count, fill = country_name)) +
+    geom_bar(width = 1, size = 1, color = "white", stat = "identity") +
+    coord_polar("y") +
+    geom_text(aes(label = paste0(round((count)/693, 2) * 100, "%")), color = "white", size=4,
+              position = position_stack(vjust = 0.5)) +
+    labs(x = NULL, y = NULL, fill = NULL, 
+         title = "More than 50% of the Meteorite fell in the Antartica") +
+    guides(fill = guide_legend(reverse = TRUE)) +
+    scale_fill_manual(values = c("#650360", "#00759A", "#DC9B32", "#A8B400", "#474334", "#A33F1F", "#6A7F10")) +
+    theme_classic() +
+    theme(axis.line = element_blank(),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          plot.title = element_text(hjust = -3, color = "#000000"))+
+    labs(fill = "Geo Location with more than 150 Meteorite fall")
+
+
+
+
+```
+
+
+
+```{r}
+
+# Prepare the plot
+
+
+# Prepare the plot
+ggplot(meteorite_fall_year_count, aes(year_fall, count)) + 
+  geom_smooth(stat = "identity") +
+  ggtitle("Countried with highest cases after China (As of March 14th 2020)")+
+  xlab("Timeseris of ")+ 
+  ylab("Total Cases")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1), 
+        plot.title = element_text(hjust = 0.5),
+        legend.title = element_text("Status of COVID-19"))
+
+
+
+```
+

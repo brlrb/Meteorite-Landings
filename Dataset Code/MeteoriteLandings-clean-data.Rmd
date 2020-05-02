@@ -1,7 +1,7 @@
 ---
 title: "MeteoriteLandings-clean-data"
 author: "Bikram Maharjan"
-date: "5/2/2020"
+date: "4/28/2020"
 output: pdf_document
 ---
 
@@ -21,25 +21,50 @@ library(lubridate)
 ```
 
 
+
+### WORKING WITH ORIGINAL DATASET
 ```{r}
 
-meteorite_landings <- read.csv('meteorite-landings.csv', stringsAsFactors = FALSE)
-meteorite_landings$reclat <- round(meteorite_landings$reclat, digits = 4)
-meteorite_landings$reclong <- round(meteorite_landings$reclong, digits = 4)
+# The original dataset from Kaggle / NASA
+# URL: https://www.kaggle.com/nasa/meteorite-landings
+meteorite_landings_original <- read.csv('meteorite-landings.csv', stringsAsFactors = FALSE)
 
-meteorite_landings$lat_lng <- mapply(
+# Round off the Latitude and Longitude value to 4 digits
+# 4th Decimal place: The fourth decimal place is worth up to 11 m: it can identify a parcel of land
+# Referring to: 
+# https://gis.stackexchange.com/questions/8650/measuring-accuracy-of-latitude-and-longitude
+# https://en.wikipedia.org/wiki/Decimal_degrees
+meteorite_landings_original$reclat <- round(meteorite_landings_original$reclat, digits = 4)
+meteorite_landings_original$reclong <- round(meteorite_landings_original$reclong, digits = 4)
+
+# Join Latitude & Longitude data into one column to get distinct values
+# Save the new value in "lat_lng"
+# The reason we are doing this is to have a common column later when we do join 
+# with DataFrame that has Country name to corrosponding coordinates
+meteorite_landings_original$lat_lng <- mapply(
   function(x, y){
     paste(x,y, sep = ",")
   }, 
-  meteorite_landings$reclat, 
-  meteorite_landings$reclong
+  meteorite_landings_original$reclat, 
+  meteorite_landings_original$reclong
   ) 
 
 
+############### This is all for preparing data in Original Data Set ############### 
 
-meteorite_landings_country <- read.csv('country_name_final_migrate.csv', stringsAsFactors = FALSE)
-#meteorite_landings_country$X <- NULL
+```
 
+
+### WORKING WITH LATITUDE & LONGITUDE DATASET
+```{r}
+
+# Dataset that has coordinate infos + name of the location in readable text. Eg: Country Name or Ocean
+meteorite_landings_country <- read.csv('meteorite-landings-country-dataset.csv', stringsAsFactors = FALSE)
+
+
+# Join Latitude & Longitude data into one column
+# Save the new value in "lat_lng"
+# The reason we are doing this is to have a common column to join with Original Dataset
 meteorite_landings_country$lat_lng <- mapply(
   function(x, y){
     paste(x,y, sep = ",")
@@ -48,32 +73,34 @@ meteorite_landings_country$lat_lng <- mapply(
   meteorite_landings_country$longitude
   ) 
 
-
-
-```
-
-
-```{r}
-
-meteorite_landings
-
-meteorite_landings_country
-
-merged_data <- left_join(meteorite_landings, meteorite_landings_country, by = "lat_lng")
-
-names(merged_data)
-
-merged_data[c(2,1,3,4,5,6,7,8,9,10,11,15,16,13,14,17,18)]
-
-
+############### This is all for preparing data in Original Data Set ############### 
 
 ```
 
+
+### Merge Original Dataset with readable location data
 ```{r}
 
+# meteorite_landings: Original Dataset with "lat_lng" column
+# meteorite_landings_country: Dataset with readable location name with "lat_lng" column
+# Join both dataset with common column -> "lat_lng"
+merged_with_country <- left_join(meteorite_landings_original, meteorite_landings_country, by = "lat_lng")
 
-# https://www.statmethods.net/management/merging.html
-merge(meteorite_landings_country,meteorite_landings,by=c("lat_lng"))
+# Display the column name of new DataFrame
+# This will help us remove duplicate column names
+names(merged_with_country)
 
+# After viewing the column names, use only the column that is needed, removing duplicate columns
+meteorite_landings_subset <- merged_with_country[c(2,1,3,4,6,7,5,12,13,17,16,14,15,11)]
+
+# Rename column "name" for better clarification
+meteorite_landings_prod <- meteorite_landings_subset %>% rename( meteorite_name = name )
+
+
+
+############### Dataset is ready to use ############### 
+
+# Save the file
+write.csv(meteorite_landings_prod, "meteorite_landings_prod.csv")
 
 ```
