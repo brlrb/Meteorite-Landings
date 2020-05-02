@@ -1,0 +1,12 @@
+name: index
+title: index
+username:
+account: meteoritelandings
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2187070
+bundleId: 3065493
+url: https://meteoritelandings.shinyapps.io/index/
+when: 1587869492.30419
+asMultiple: FALSE
+asStatic: FALSE

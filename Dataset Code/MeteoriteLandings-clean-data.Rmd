@@ -1,0 +1,79 @@
+---
+title: "MeteoriteLandings-clean-data"
+author: "Bikram Maharjan"
+date: "5/2/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE}
+
+library(tidyverse)
+library(ggplot2)
+library(reshape2)
+library(data.table)
+library(lubridate)
+
+```
+
+
+```{r}
+
+meteorite_landings <- read.csv('meteorite-landings.csv', stringsAsFactors = FALSE)
+meteorite_landings$reclat <- round(meteorite_landings$reclat, digits = 4)
+meteorite_landings$reclong <- round(meteorite_landings$reclong, digits = 4)
+
+meteorite_landings$lat_lng <- mapply(
+  function(x, y){
+    paste(x,y, sep = ",")
+  }, 
+  meteorite_landings$reclat, 
+  meteorite_landings$reclong
+  ) 
+
+
+
+meteorite_landings_country <- read.csv('country_name_final_migrate.csv', stringsAsFactors = FALSE)
+#meteorite_landings_country$X <- NULL
+
+meteorite_landings_country$lat_lng <- mapply(
+  function(x, y){
+    paste(x,y, sep = ",")
+  }, 
+  meteorite_landings_country$latitude, 
+  meteorite_landings_country$longitude
+  ) 
+
+
+
+```
+
+
+```{r}
+
+meteorite_landings
+
+meteorite_landings_country
+
+merged_data <- left_join(meteorite_landings, meteorite_landings_country, by = "lat_lng")
+
+names(merged_data)
+
+merged_data[c(2,1,3,4,5,6,7,8,9,10,11,15,16,13,14,17,18)]
+
+
+
+```
+
+```{r}
+
+
+# https://www.statmethods.net/management/merging.html
+merge(meteorite_landings_country,meteorite_landings,by=c("lat_lng"))
+
+
+```
